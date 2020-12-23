@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+      
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+
+<title>Rising Temperatures</title>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+
+<!--all the styling goes in here      -->
+      
+<style>
+		body {
+		  overflow: hidden;
+		  margin: 0;
+		  font-size: 15px;
+          background-image: url('wildfire2.jpeg');    
+		}
+
+        .container {
+            display: flex;
+            justify-content: center;
+        }
+                    
+        h1 {
+            text-align: center;
+        }
+</style>
+</head>
+<body>
+      
+<!--    nav bar  -->
+<nav class="w3-bar w3-black">
+  <a href="WildfiresInNumbers.html" class="w3-button w3-bar-item">Wildfires in Numbers</a>
+  <a href="TempWildfire.html" class="w3-button w3-bar-item">Rising Temperatures</a>
+  <a href="sample.html" class="w3-button w3-bar-item">The CO2 Effect</a>
+  <a href="BusinessClosures.html" class="w3-button w3-bar-item">Business Closures</a>
+  <a href="LineGraph.html" class="w3-button w3-bar-item">People and Economy</a>
+  <a href="Domino.html" class="w3-button w3-bar-item">Domino</a>    
+</nav>   
+      
+<!-- the text content -->
+<div>
+<h1 style="color: #FF4500"><b> Temperatures </b></h1>
+<p style="color: white">The visualization below shows a clear relation of temperature and number of wildfires. At lower temperatures, the number of wildfires is quite
+low which is the result of a cooler atmosphere around that period while on the other hand if we look at the higher temperatures,  the number of fires is quite high as compared to the lower temperatures.
+<br>So, a general trend of rise in temperature resulting in rise in
+number of wildfires can be justified to quite some extent as there are some dips in wildfire numbers even at higher temperatures.
+The main aim was to find a relation between temperature and wildfires but what the visualization shows is that not only when the temperature rises
+there is a jump in number of wildfires but the intensity of the fire which is recorded as the acres burned fire also goes up significantly. As the
+temperature rises, the land dries up and allows the fire to spread more rapidly and in process increasing the intensity of it.
+
+</p>
+    
+</div>   
+      
+<div width = 100% height = 20%></div>
+ 
+<!--div for the chart-->
+      
+<div class = "container" id="chart1">
+<div id="chart">        
+</div>
+</div>
+    
+    <p style="color: white"> <b style="color: #FF4500">GUIDE:</b>
+    <br>1. Hover over the areas to see it more clearly.
+    <br>2. Hover over the circular points to see the temperature and number of wildfires.
+    </p>
+      
+    
+    <p style="color: white"> <b style="color: #FF4500">Note:</b>
+    <br>The number of wildfires has been scaled down of hundreds and multiplied by two to adjust.
+    <br>Temperatures have been multiplied by two to give a bigger area. And they are in Farhenheit.    
+    <br>Exception: California's number of wildfires have not been multiplied by two to avoid the graph from being small.    
+    </p>  
+      
+<script>
+        
+    var RadarChart = {
+  draw: function(id, d, options){
+  var cfg = {
+	 radius: 5,
+	 w: 1500,
+	 h: 1500,
+	 factor: 1,
+	 factorLegend: .85,
+	 levels: 5,
+	 maxValue: 0,
+	 radians: 2 * Math.PI,
+	 opacityArea: 0.5,
+	 ToRight: 5,
+	 TranslateX: 80,
+	 TranslateY: 30,
+	 ExtraWidthX: 100,
+	 ExtraWidthY: 100,
+	 color: d3.scale.category10()
+	};
+	
+	if('undefined' !== typeof options){
+	  for(var i in options){
+		if('undefined' !== typeof options[i]){
+		  cfg[i] = options[i];
+		}
+	  }
+	}
+	cfg.maxValue = Math.max(cfg.maxValue, d3.max(d, function(i){return d3.max(i.map(function(o){return o.value;}))}));
+	var allAxis = (d[0].map(function(i, j){return i.axis}));
+	var total = allAxis.length;
+	var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
+	var Format = d3.format('°');
+	d3.select(id).select("svg").remove();
+	
+	var g = d3.select(id)
+			.append("svg")
+			.attr("width", cfg.w+cfg.ExtraWidthX+50)
+			.attr("height", cfg.h+cfg.ExtraWidthY)
+			.append("g")
+			.attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
+			;
+
+	var tooltip;
+	
+	//the circles
+	for(var j=0; j<cfg.levels-1; j++){
+	  var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
+	  g.selectAll(".levels")
+	   .data(allAxis)
+	   .enter()
+	   .append("svg:line")
+	   .attr("x1", function(d, i){return levelFactor*(1-cfg.factor*Math.sin(i*cfg.radians/total));})
+	   .attr("y1", function(d, i){return levelFactor*(1-cfg.factor*Math.cos(i*cfg.radians/total));})
+	   .attr("x2", function(d, i){return levelFactor*(1-cfg.factor*Math.sin((i+1)*cfg.radians/total));})
+	   .attr("y2", function(d, i){return levelFactor*(1-cfg.factor*Math.cos((i+1)*cfg.radians/total));})
+	   .attr("class", "line")
+	   .style("stroke", "grey")
+	   .style("stroke-opacity", "0.75")
+	   .style("stroke-width", "0.3px")
+	   .attr("transform", "translate(" + (cfg.w/2-levelFactor) + ", " + (cfg.h/2-levelFactor) + ")");
+	}
+
+	//text indicating the max value 
+	for(var j=0; j<cfg.levels; j++){
+	  var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
+	  g.selectAll(".levels")
+	   .data([1]) //dummy data
+	   .enter()
+	   .append("svg:text")
+	   .attr("x", function(d){return levelFactor*(1-cfg.factor*Math.sin(0));})
+	   .attr("y", function(d){return levelFactor*(1-cfg.factor*Math.cos(0));})
+	   .attr("class", "legend")
+	   .style("font-family", "sans-serif")
+	   .style("font-size", "10px")
+	   .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
+	   .attr("fill", "#737373")
+	   .text(Format((j+1)*cfg.maxValue/cfg.levels));
+	}
+	
+	series = 0;
+
+	var axis = g.selectAll(".axis")
+			.data(allAxis)
+			.enter()
+			.append("g")
+			.attr("class", "axis");
+
+	axis.append("line")
+		.attr("x1", cfg.w/2)
+		.attr("y1", cfg.h/2)
+		.attr("x2", function(d, i){return cfg.w/2*(1-cfg.factor*Math.sin(i*cfg.radians/total));})
+		.attr("y2", function(d, i){return cfg.h/2*(1-cfg.factor*Math.cos(i*cfg.radians/total));})
+		.attr("class", "line")
+		.style("stroke", "grey")
+		.style("stroke-width", "1px");
+
+	axis.append("text")
+		.attr("class", "legend")
+		.text(function(d){return d})
+		.style("font-family", "sans-serif")
+		.style("font-size", "11px")
+        .style("fill","white")
+		.attr("text-anchor", "middle")
+		.attr("dy", "1.5em")
+		.attr("transform", function(d, i){return "translate(0, -10)"})
+		.attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total);})
+		.attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
+
+   // funtionality
+	d.forEach(function(y, x){
+	  dataValues = [];
+	  g.selectAll(".nodes")
+		.data(y, function(j, i){
+		  dataValues.push([
+			cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+			cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
+		  ]);
+		});
+	  dataValues.push(dataValues[0]);
+	  g.selectAll(".area")
+					 .data([dataValues])
+					 .enter()
+					 .append("polygon")
+					 .attr("class", "radar-chart-serie"+series)
+					 .style("stroke-width", "2px")
+					 .style("stroke", cfg.color(series))
+					 .attr("points",function(d) {
+						 var str="";
+						 for(var pti=0;pti<d.length;pti++){
+							 str=str+d[pti][0]+","+d[pti][1]+" ";
+						 }
+						 return str;
+					  })
+					 .style("fill", function(j, i){return cfg.color(series)})
+					 .style("fill-opacity", cfg.opacityArea)
+					 .on('mouseover', function (d){
+										z = "polygon."+d3.select(this).attr("class");
+										g.selectAll("polygon")
+										 .transition(200)
+										 .style("fill-opacity", 0.1); 
+										g.selectAll(z)
+										 .transition(200)
+										 .style("fill-opacity", .7);
+									  })
+					 .on('mouseout', function(){
+										g.selectAll("polygon")
+										 .transition(200)
+										 .style("fill-opacity", cfg.opacityArea);
+					 });
+	  series++;
+	});
+	series=0;
+
+
+	d.forEach(function(y, x){
+	  g.selectAll(".nodes")
+		.data(y).enter()
+		.append("svg:circle")
+		.attr("class", "radar-chart-serie"+series)
+		.attr('r', cfg.radius/1.5)
+		.attr("alt", function(j){return Math.max(j.value, 0)})
+		.attr("cx", function(j, i){
+		  dataValues.push([
+			cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+			cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
+		]);
+		return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
+		})
+		.attr("cy", function(j, i){
+		  return cfg.h/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total));
+		})
+		.attr("data-id", function(j){return j.axis})
+		.style("fill", cfg.color(series)).style("fill-opacity", .9)
+		.on('mouseover', function (d){
+					newX =  parseFloat(d3.select(this).attr('cx')) - 10;
+					newY =  parseFloat(d3.select(this).attr('cy')) - 5;
+					
+					tooltip
+						.attr('x', newX)
+						.attr('y', newY)
+						.text(Format(d.value)/2)
+						.transition(200)
+						.style('opacity', 1);
+						
+					z = "polygon."+d3.select(this).attr("class");
+					g.selectAll("polygon")
+						.transition(200)
+						.style("fill-opacity", 0.1); 
+					g.selectAll(z)
+						.transition(200)
+						.style("fill-opacity", .7);
+				  })
+		.on('mouseout', function(){
+					tooltip
+						.transition(200)
+						.style('opacity', 0);
+					g.selectAll("polygon")
+						.transition(200)
+						.style("fill-opacity", cfg.opacityArea);
+				  })
+		.append("svg:title")
+		.text(function(j){return [Math.max(j.value, 0)]/2});
+
+	  series++;
+	});
+      
+	//Tooltip
+	tooltip = g.append('text')
+			   .style('opacity', 0)
+			   .style('font-family', 'sans-serif')
+			   .style('font-size', '13px')
+               .style("fill","white");
+  }
+};
+      
+var w = 500,h = 500;
+
+var colorscale = d3.scale.category10(["#FFA07A","#800000"]);
+
+//Legend titles
+var LegendOptions = ['Temperature','Wildfire'];
+
+//Data
+var d = [
+		  [
+{axis:"Alaska", value:25.1750954552*2},
+{axis:"North, Dakota", value:42.8860000004*2},
+{axis:"Montana", value:43.6010799992*2},
+{axis:"Wyoming", value:43.7147200004*2},
+{axis:"Idaho", value:43.8589200002*2},
+{axis:"Minnesota", value:43.9066000004*2},
+{axis:"Maine", value:44.4076399994*2},
+{axis:"Vermont", value:46.2226400006*2},
+{axis:"Wisconsin", value:46.4401200002*2},
+{axis:"New, Hampshire", value:46.5905199992*2},
+{axis:"Colorado", value:46.9737199994*2},
+{axis:"South, Dakota", value:47.5449200006*2},
+{axis:"Michigan", value:47.5474400006*2},
+{axis:"Washington", value:47.58476*2},
+{axis:"Oregon", value:48.2023599998*2},
+{axis:"New, York", value:49.0397599994*2},
+{axis:"Utah", value:49.1494800002*2},
+{axis:"Massachusetts", value:49.9792400006*2},
+{axis:"Iowa", value:50.933400008*2},
+{axis:"Nebraska", value:51.310479992*2},
+{axis:"Nevada", value:51.487199996*2},
+{axis:"Pennsylvania", value:51.894719996*2},
+{axis:"Rhode, Island", value:52.197879992*2},
+{axis:"Connecticut", value:52.265440004*2},
+{axis:"Ohio", value:53.685039992*2},
+{axis:"West, Virginia", value:54.464759996*2},
+{axis:"Indiana", value:54.694079996*2},
+{axis:"Illinois", value:54.749400008*2},
+{axis:"New, Jersey", value:54.751839998*2},
+{axis:"New, Mexico", value:55.696159994*2},
+{axis:"Delaware", value:56.780560004*2},
+{axis:"Maryland", value:56.99048*2},
+{axis:"Kansas", value:57.075319994*2},
+{axis:"Missouri", value:57.272239994*2},
+{axis:"Virginia", value:57.710280002*2},
+{axis:"Kentucky", value:57.99236*2},
+{axis:"California", value:59.199920006*2},
+{axis:"Tennessee", value:59.777880008*2},
+{axis:"North, Carolina", value:60.897399998*2},
+{axis:"Arizona", value:61.608480008*2},
+{axis:"Oklahoma", value:62.625520004*2},
+{axis:"Arkansas", value:62.860679996*2},
+{axis:"South, Carolina", value:64.78664*2},
+{axis:"Alabama", value:64.897840004*2},
+{axis:"Georgia, (State)", value:65.645520008*2},
+{axis:"Mississippi", value:65.84792*2},
+{axis:"Texas", value:67.261760006*2},
+{axis:"Louisiana", value:68.564359994*2},
+{axis:"Florida", value:72.239680004*2},
+{axis:"Hawaii", value:72.883686362*2},
+
+              ],
+  [   
+{axis:"Alaska", value:43.64*2},
+{axis:"North, Dakota", value:10.10*2},
+{axis:"Montana", value:40.93*2},
+{axis:"Wyoming", value:16.78*2},
+{axis:"Idaho", value:30.09*2},
+{axis:"Minnesota", value:43.90*2},
+{axis:"Maine", value:20.92*2},
+{axis:"Vermont", value:10.36*2},
+{axis:"Wisconsin", value:22.91*2},
+{axis:"New, Hampshire", value:5.23*2},
+{axis:"Colorado", value:35.38*2},
+{axis:"South, Dakota", value:28.69*2},
+{axis:"Michigan", value:12.17*2},
+{axis:"Washington", value:34.08*2},
+{axis:"Oregon", value:52.98*2},
+{axis:"New, York", value:21.64*2},
+{axis:"Utah", value:34.32*2},
+{axis:"Massachusetts", value:34.54*2},
+{axis:"Iowa", value:5.86*2},
+{axis:"Nebraska", value:53.13*2},
+{axis:"Nevada", value:15.47*2},
+{axis:"Pennsylvania", value:13.49*2},
+{axis:"Rhode, Island", value:0.67*2},
+{axis:"Connecticut", value:3.65*2},
+{axis:"Ohio", value:8.34*2},
+{axis:"West, Virginia", value:19.09*2},
+{axis:"Indiana", value:1.38*2},
+{axis:"Illinois", value:12.13*2},
+{axis:"New, Jersey", value:31.63*2},
+{axis:"New, Mexico", value:27.25*2},
+{axis:"Delaware", value:0.16*2},
+{axis:"Maryland", value:4.17*2},
+{axis:"Kansas", value:1.50*2},
+{axis:"Missouri", value:37.06*2},
+{axis:"Virginia", value:13.40*2},
+{axis:"Kentucky", value:37.47*2},
+{axis:"California", value:243.98},
+{axis:"Tennessee", value:32.47*2},
+{axis:"North, Carolina", value:79.96*2},
+{axis:"Arizona", value:59.00*2},
+{axis:"Oklahoma", value:46.64*2},
+{axis:"Arkansas", value:48.79*2},
+{axis:"South, Carolina", value:56.57*2},
+{axis:"Alabama", value:41.56*2},
+{axis:"Georgia, (State)", value:148.18*2},
+{axis:"Mississippi", value:44.33*2},
+{axis:"Texas", value:102.31*2},
+{axis:"Louisiana", value:62.72*2},
+{axis:"Florida", value:75.37*2},
+{axis:"Hawaii", value:0.12*2},
+              ]
+    
+		];
+
+
+var mycfg = {
+  w: w+80,
+  h: h+80,
+  maxValue: 0.6,
+  levels: 4,
+  ExtraWidthX: 100
+}
+
+//calling the function to draw the chart
+
+RadarChart.draw("#chart1", d, mycfg);
+
+var svg = d3.select('#chart1')
+	.selectAll('svg')
+	.append('svg')
+	.attr("width", w+300)
+	.attr("height", h)
+
+//title for the legend
+var text = svg.append("text")
+	.attr("class", "title")
+	.attr('transform', 'translate(90,0)') 
+	.attr("x", w - 55)
+	.attr("y", 10)
+	.attr("font-size", "12px")
+	.attr("fill", "white")
+	.text("Legend:");
+		
+//initiating Legend	
+var legend = svg.append("g")
+	.attr("class", "legend")
+	.attr("height", 100)
+	.attr("width", 200)
+	.attr('transform', 'translate(90,20)') 
+	;
+        
+	//legend coloured squares
+	legend.selectAll('rect')
+	  .data(LegendOptions)
+	  .enter()
+	  .append("rect")
+	  .attr("x", w - 55)
+	  .attr("y", function(d, i){ return i * 20;})
+	  .attr("width", 10)
+	  .attr("height", 10)
+	  .style("fill", function(d, i){ return colorscale(i);})
+	  ;
+        
+	//text for squares
+	legend.selectAll('text')
+	  .data(LegendOptions)
+	  .enter()
+	  .append("text")
+	  .attr("x", w - 40)
+	  .attr("y", function(d, i){ return i * 20 + 9;})
+	  .attr("font-size", "11px")
+	  .attr("fill", "white")
+	  .text(function(d) { return d; })
+	  ;        
+        
+        
+        
+</script>
+
+      
+</body>
+    
+</html>
+
+
+    

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+svg {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000
+}
+
+.x.axis path {
+  fill:none;
+  stroke:#000;
+}
+
+.line {
+  fill: none;
+  stroke-width: 1.5px;
+}
+    
+</style>
+<body>
+
+<script src="https://d3js.org/d3.v3.js"></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+<script>
+window.onload = function(){
+var margin = {top: 50, right: 80, bottom: 30, left: 50},
+    width = 900 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);    
+    
+var y = d3.scale.linear()
+    .range([height,0]);
+
+var color = d3.scale.category20();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()    
+    .x(function(d) { return x(d.TimeOfDay); })
+    .y(function(d) { return y(d.HourlyAverage); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("PedestrianCountingSystemWeekdaysAndWeekends.csv", function(data) {
+   
+  color.domain(d3.keys(data[0]).filter(function(key) { return key == "Day"; }));
+  
+  data = data.map( function (d) { 
+    return { 
+      Day: d.Day,
+      TimeOfDay: +d.TimeOfDay,
+      HourlyAverage: +d.HourlyAverage}; 
+});  
+  
+  data = d3.nest().key(function(d) { return d.Day; }).entries(data);
+
+  svg.selectAll(".Day")
+    .data(data)
+    .enter()
+    .append("text")
+    .text("Pedestrian counts during weekdays fluctuate at peak hours,")
+    .attr("x",0 + margin.left)
+    .attr("y",20);
+
+  svg.selectAll(".Day")
+    .data(data)
+    .enter()
+    .append("text")
+    .text("whereas counts during weekends grow and shrink steadily throughout the day.")
+    .attr("x",0 + margin.left)
+    .attr("y",32);
+     
+  x.domain([d3.min(data, function(d) { return d3.min(d.values, function (d) { return d.TimeOfDay; }); }),
+             d3.max(data, function(d) { return d3.max(d.values, function (d) { return d.TimeOfDay; }); })]);
+  y.domain([0, d3.max(data, function(d) { return d3.max(d.values, function (d) { return d.HourlyAverage; }); })]);
+                                                                                   
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+  
+  svg.append("text")
+      .attr("x", width/2)
+      .attr("y", height + margin.bottom - 5)
+      .style("text-anchor","middle")
+      .text("Time Of Day");
+    
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+  svg.append("text")
+      .attr("transform","rotate(-90)")
+      .attr("y", 0 - margin.left )
+      .attr("x", 0 - (height/2))
+      .attr("dy","1em")
+      .style("text-anchor","middle")
+      .text("Pedestrain count");
+      
+  var days = svg.selectAll(".Day")
+      .data(data, function(d) { return d.key; })
+    .enter().append("g")
+      .attr("class", "Day");
+
+  days.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { return color(d.key); })
+    
+  days.append("g").selectAll("circle")
+  .data(function(d){return d.values})
+  .enter()
+  .append("circle")
+  .attr("r", 2)
+  .attr("cx", function(d){return x(d.TimeOfDay)})
+  .attr("cy", function(d){return y(d.HourlyAverage)})
+  .attr("fill", "none")
+  .attr("stroke", "black")
+  .append('title')
+  .text((d) => {return "Type of Day: " + d.Day + "\n" + "Time of Day: " + d.TimeOfDay + "\n" + "Pedestrian count: " + d.HourlyAverage})
+
+  
+});                    
+}
+</script>

@@ -1,0 +1,481 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+<title>Comparison of three</title>
+<style>
+
+.axis path,
+.axis line, 
+.axis1 path,
+.axis1 line {
+  fill: none;
+  stroke: white;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path, .x.axis1 path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2px;
+}
+
+.legend-box {
+  cursor: pointer;  
+}
+
+#mouse-tracker {
+  stroke: #E6E7E8;
+  stroke-width: 1px;
+}
+
+.hover-line { 
+  stroke: #E6E7E8;
+  fill: none;
+  stroke-width: 1px;
+  left: 10px;
+  shape-rendering: crispEdges;
+  opacity: 1e-6;
+}
+
+.hover-text {
+  stroke: none;
+  font-size: 30px;
+  font-weight: bold;
+  fill: #000000;
+}
+
+.tooltip {
+  font-weight: normal;
+}
+
+.brush .extent {
+  stroke: #FFF;
+  shape-rendering: crispEdges;
+}
+    
+h1 {
+    font-size: 30px;
+    color: #FF4500;
+    text-align: center;
+}
+    
+p {
+    font-size: 15px;
+    color: #FF4500;
+    
+}    
+
+h4 {
+    font-size: 14px;
+    color: #FF4500;
+    text-align: center;
+}        
+
+body {
+  background-image: url('wildfire2.jpeg');
+}  
+
+
+.container {
+            display: flex;
+            justify-content: center;
+            background color: transparent;
+}    
+
+    
+</style>
+</head>
+       
+<body>
+
+<nav class="w3-bar w3-black">
+  <a href="WildfiresInNumbers.html" class="w3-button w3-bar-item">Wildfires in Numbers</a>
+  <a href="TempWildfire.html" class="w3-button w3-bar-item">Rising Temperatures</a>
+  <a href="sample.html" class="w3-button w3-bar-item">The CO2 Effect</a>
+  <a href="BusinessClosures.html" class="w3-button w3-bar-item">Business Closures</a>
+  <a href="LineGraph.html" class="w3-button w3-bar-item">People and Economy</a>
+  <a href="Domino.html" class="w3-button w3-bar-item">Domino</a>    
+</nav> 
+    
+<script src="https://d3js.org/d3.v3.js"></script>
+    <h1><b>Effect of Wildfires on GDP and Population</b></h1>
+    
+    <div>
+
+<p style="color: white">The visualization shown below indicates the number of wildfires with respect to GDP and population. It can be clearly seen from the
+visualization that there is no specific trend of wildfires impacting the population as the population has remained steady through the years 2010 to
+2016 even when the wildfire numbers have increased or decreased. 
+<br>While in case of GDP, even though the wildfires affect human habitats, animal
+habitats, businesses, atmosphere and farming, there is a lesser impact on the GDP of the wildfires as USA’s GDP is always on the rise as shown in the
+visualization. Loss of life, house, business accounts to a huge amount of money but that negligibly affects the GDP of the nation as the number of
+businesses shut give rise to more new businesses to open up and the age old wildfire seasons continue to cause destruction of many folds and keeps
+on increasing every year with a minimal effect on GDP but a humongous effect on atmosphere, human lives and animal lives.
+</p>
+    
+</div>
+    
+    <h4> [Population has been scaled from hundred million to thousands (k)]</h4>
+    
+<div class = "container" id= "chart">
+<script>
+
+var margin = {top: 20, right: 200, bottom: 100, left: 50},
+    margin2 = { top: 430, right: 10, bottom: 20, left: 40 },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom,
+    height2 = 500 - margin2.top - margin2.bottom;
+
+var parseDate = d3.time.format("%Y").parse;
+var bisectDate = d3.bisector(function(d) { return d.Year; }).left;
+
+var xScale = d3.time.scale()
+    .range([0, width]),
+
+    xScale2 = d3.time.scale()
+    .range([0, width]); // Duplicate xScale for brushing ref later
+
+var yScale = d3.scale.linear()
+    .range([height, 0]);
+
+
+var color = d3.scale.ordinal().range(["#64B98C","#8F90CD","#E26962"]);  
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom"),
+
+    xAxis2 = d3.svg.axis() // xAxis for brush slider
+    .scale(xScale2)
+    .orient("bottom");    
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("left");  
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d) { return xScale(d.Year); })
+    .y(function(d) { return yScale(d.rating); })
+    .defined(function(d) { return d.rating; });  // Hiding line value defaults of 0 for missing data
+
+var maxY; // Defined later to update yAxis
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom) //height + margin.top + margin.bottom
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Create invisible rect for mouse tracking
+svg.append("rect")
+    .attr("width", width)
+    .attr("height", height)                                    
+    .attr("x", 0) 
+    .attr("y", 0)
+    .attr("id", "mouse-tracker")
+    .style("fill", "white"); 
+
+//slider  
+var context = svg.append("g") // Brushing context box container
+    .attr("transform", "translate(" + 0 + "," + 410 + ")")
+    .attr("class", "context");
+
+
+svg.append("defs")
+  .append("clipPath") 
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height); 
+
+d3.csv("Book3.csv", function(error, data) { 
+  color.domain(d3.keys(data[0]).filter(function(key) { 
+    return key !== "Year"; 
+  }));
+
+// parsing the date    
+  data.forEach(function(d) { 
+    d.Year = parseDate(d.Year);
+  });
+
+  var categories = color.domain().map(function(name) { 
+
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {
+          Year: d.Year, 
+          rating: +(d[name]),
+          };
+      }),
+      visible: (name === "Wildfires" ? true : false) // only to show wildfires curve 
+    };
+  });
+
+  xScale.domain(d3.extent(data, function(d) { return d.Year; })); 
+
+  yScale.domain([0,
+    d3.max(categories, function(c) { return d3.max(c.values, function(v) { return v.rating; }); })
+  ]);
+
+  xScale2.domain(xScale.domain());
+
+ var brush = d3.svg.brush()
+    .x(xScale2) 
+    .on("brush", brushed);
+
+  context.append("g") 
+      .attr("class", "x axis1")
+      .attr("transform", "translate(0," + height2 + ")")
+      .style("fill","white")
+      .style("font","14px times")
+      .call(xAxis2);
+
+  var contextArea = d3.svg.area() 
+    .interpolate("monotone")
+    .x(function(d) { return xScale2(d.Year); }) // x is scaled to xScale2
+    .y0(height2) 
+    .y1(0); 
+
+  //plot the rect as the bar at the bottom
+  context.append("path") 
+    .attr("class", "area")
+    .attr("d", contextArea(categories[0].values)) 
+    .attr("fill", "#F1F1F2");
+    
+  
+  context.append("g")
+    .attr("class", "x brush")
+    .call(brush)
+    .selectAll("rect")
+    .attr("height", height2) 
+      .attr("fill", "#E6E7E8");  
+  
+
+  // draw line graph
+  svg.append("g")
+      .attr("class", "x axis")
+      .style("font", "14px times")
+      .style("fill","white")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .style("font", "14px times")
+      .style("fill","white")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("x", -10)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .style("fill","white")
+      .text("Numbers in K");
+    
+  var issue = svg.selectAll(".issue")
+      .data(categories) 
+    .enter().append("g")
+      .attr("class", "issue");   
+
+  issue.append("path")
+      .attr("class", "line")
+      .style("pointer-events", "none") 
+      .attr("id", function(d) {
+        return "line-" + d.name.replace(" ", "").replace("/", ""); 
+      })
+      .attr("d", function(d) { 
+        return d.visible ? line(d.values) : null; 
+      })
+      .attr("clip-path", "url(#clip)")
+      .style("stroke", function(d) { return color(d.name); });
+
+  // draw legend
+  var legendSpace = 150 / categories.length; 
+
+  issue.append("rect")
+      .attr("width", 10)
+      .attr("height", 10)                                    
+      .attr("x", width + (margin.right/3)) 
+      .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace) - 20; })  // spacing
+      .attr("fill",function(d) {
+        return d.visible ? color(d.name) : "#F1F1F2"; 
+      })
+      .attr("class", "legend-box")
+
+      .on("click", function(d){ 
+        d.visible = !d.visible; 
+        maxY = findMaxY(categories); 
+        yScale.domain([0,maxY]); 
+        svg.select(".y.axis")
+          .transition()
+          .call(yAxis);   
+
+        issue.select("path")
+          .transition()
+          .attr("d", function(d){
+            return d.visible ? line(d.values) : null; 
+          })
+
+        issue.select("rect")
+          .transition()
+          .attr("fill", function(d) {
+          return d.visible ? color(d.name) : "#F1F1F2";
+        });
+      })
+
+      .on("mouseover", function(d){
+
+        d3.select(this)
+          .transition()
+          .attr("fill", function(d) { return color(d.name); });
+
+        d3.select("#line-" + d.name.replace(" ", "").replace("/", ""))
+          .transition()
+          .style("stroke-width", 5);  
+      })
+
+      .on("mouseout", function(d){
+
+        d3.select(this)
+          .transition()
+          .attr("fill", function(d) {
+          return d.visible ? color(d.name) : "#F1F1F2";});
+
+        d3.select("#line-" + d.name.replace(" ", "").replace("/", ""))
+          .transition()
+          .style("stroke-width", 1.5);
+      })
+      
+  issue.append("text")
+      .style("font", "14px times")
+      .style("fill","white")
+      .attr("x", width + (margin.right/3))
+      .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace); })  // (return (11.25/2 =) 5.625) + i * (5.625) 
+      .text(function(d) { return d.name; }); 
+  
+  // Hover line 
+  var hoverLineGroup = svg.append("g") 
+            .attr("class", "hover-line");
+
+  var hoverLine = hoverLineGroup 
+        .append("line")
+            .attr("id", "hover-line")
+            .attr("x1", 10).attr("x2", 10) 
+            .attr("y1", 0).attr("y2", height + 10)
+            .style("pointer-events", "none") 
+            .style("opacity", 1e-6); 
+
+  var hoverDate = hoverLineGroup
+        .append('text')
+            .attr("class", "hover-text")
+            .attr("y", height - (height-40))
+            .attr("x", width - 150) 
+            .style("fill", "#E6E7E8");
+
+  var columnNames = d3.keys(data[0]) 
+                  .slice(1); 
+
+  var focus = issue.select("g")
+      .data(columnNames) 
+    .enter().append("g") 
+      .attr("class", "focus"); 
+
+  focus.append("text") 
+        .attr("class", "tooltip")
+        .style("font", "12px times")
+        .style("fill", "#FF4500")
+        .attr("x", width) 
+        .attr("y", function (d, i) { return (legendSpace)+i*(legendSpace); }); 
+
+  // Add mouseover events for hover line.
+  d3.select("#mouse-tracker") 
+  .on("mousemove", mousemove) 
+  .on("mouseout", function() {
+      hoverDate
+          .text(null) 
+
+      d3.select("#hover-line")
+          .style("opacity", 1e-6); 
+  });
+
+  function mousemove() { 
+      var mouse_x = d3.mouse(this)[0]; 
+      var graph_x = xScale.invert(mouse_x); 
+      var format = d3.time.format('%Y'); 
+      
+      hoverDate.text(format(graph_x)); 
+      
+      d3.select("#hover-line") 
+          .attr("x1", mouse_x) 
+          .attr("x2", mouse_x)
+          .style("opacity", 1); 
+
+      
+
+      var x0 = xScale.invert(d3.mouse(this)[0]), 
+      i = bisectDate(data, x0, 1), 
+      d0 = data[i - 1],
+      d1 = data[i],
+      d = x0 - d0.Year > d1.Year - x0 ? d1 : d0;
+      
+      focus.select("text").text(function(columnName){
+         return (d[columnName]);
+      });
+  }; 
+
+  function brushed() {
+
+    xScale.domain(brush.empty() ? xScale2.domain() : brush.extent()); 
+
+    // replotting xAxis with transition  
+    svg.select(".x.axis") 
+          .transition()
+          .call(xAxis);
+
+    maxY = findMaxY(categories); 
+    yScale.domain([0,maxY]); 
+    
+    svg.select(".y.axis") 
+      .transition()
+      .call(yAxis);   
+
+    issue.select("path") 
+      .transition()
+      .attr("d", function(d){
+          return d.visible ? line(d.values) : null; 
+      });
+    
+  };      
+
+}); 
+  
+  function findMaxY(data){  
+    var maxYValues = data.map(function(d) { 
+      if (d.visible){
+        return d3.max(d.values, function(value) { 
+          return value.rating; })
+      }
+    });
+    return d3.max(maxYValues);
+  }
+
+</script>
+</div>     
+
+<p style="color: white"> <b style="color: #FF4500">GUIDE:</b>
+    <br>1. Click on the legend squares to remove or display the corresponding line.
+    <br>2. Hover in the area to see the GDP, population and wildfire numbers change.
+    <br>3. Hover over the legend to highlight the trend.
+    <br>4. Use the slider below to see through the years, months and days to see the trends of the period you like.
+    <br>5. To get back to normal graph click anywhere on the slider except the selected part to get back in normal period.
+    </p>    
+</body>
+    
+</html>

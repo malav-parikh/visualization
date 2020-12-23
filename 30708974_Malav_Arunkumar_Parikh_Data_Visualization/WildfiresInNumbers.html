@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/3/w3.css">
+<title>Wildfires In Numbers</title>
+<head>
+<style>
+
+.rectangle {
+	fill: #FF4500;
+}
+.rectangle:hover {
+	fill: #8B0000;
+}
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: white;
+  shape-rendering: crispEdges;
+}
+
+body {
+  background-image: url('wildfire2.jpeg');
+}  
+
+    p {
+        color: white;
+    } 
+    h1{
+        text-align: center;
+    }
+    
+</style>
+</head>
+<body>
+<nav class="w3-bar w3-black">
+  <a href="WildfiresInNumbers.html" class="w3-button w3-bar-item">Wildfires in Numbers</a>
+  <a href="TempWildfire.html" class="w3-button w3-bar-item">Rising Temperatures</a>
+  <a href="sample.html" class="w3-button w3-bar-item">The CO2 Effect</a>
+  <a href="BusinessClosures.html" class="w3-button w3-bar-item">Business Closures</a>
+  <a href="LineGraph.html" class="w3-button w3-bar-item">People and Economy</a>
+  <a href="Domino.html" class="w3-button w3-bar-item">Domino</a>    
+</nav>  
+    
+    
+<div>
+<h1 style="color: #FF4500"><b> Wildfires and USA </b></h1>
+<p>Wildfires have been a dominant force of causing destructions across the world since long and wildfires in United States of America (USA) are a common
+phenomenon. Though wildfires are a natural disaster, there are multiple reasons due to which wildfires occur and global warming is one of them. Global
+warming has been one big reason due to which wildfires are occurring frequently as it has resulted in extreme weather conditions which causes wildfires.
+<br>A statistic about wildfire suggest that, California is one of the states which has the highest number of wildfires across USA and in recent years it has increase
+five folds and the intensity of these fires has been severe. Wildfires cause damage to vegetation as it starts in an area of combustible vegetation, but
+vegetation is not the only thing which is affected due to it.     
+<br>    It causes damage on multiple fronts and thus, this report is aimed to draw some comparisons and
+show trends of wildfires and its impacts and its relation to various other things.
+        Here is a representation of wildfires over a period of 9 years.
+</p>
+    
+</div>    
+<div id="drop" align= center></div>   
+<div id="graph" align= center></div>  
+    
+    <p> <b style="color: #FF4500">GUIDE:</b>
+    <br>1. Use the dropdown to change through years.
+    <br>2. Hover over the bars to see the actual number of wildfires and state.
+    </p>
+    
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+
+<script>
+
+var margin = {top: 80, right: 180, bottom: 100, left: 180},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var svg = d3.select("#graph").append("svg")
+	.attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("TotalWildfiresByStateAndYear.csv", function(error, data){
+    
+svg.selectAll("annotate")
+    .data(data)
+    .enter()
+    .append("text")
+    .text("Number of Wildfires over the years have fluctuated")
+    .attr("x",146)
+    .attr("y",20)
+    .style("fill","white")
+    .style("font-size", "12px");
+
+  svg.selectAll("annotate")
+    .data(data)
+    .enter()
+    .append("text")
+    .text("But Texas & California have always been the worst hit")
+    .attr("x",138)
+    .attr("y",38)
+    .style("fill","white")
+    .style("font-size", "12px");
+    
+    
+	// getting column values where column is not state
+	var elements = Object.keys(data[0])
+		.filter(function(d){
+			return ((d != "State"));
+		});
+	var selection = elements[0];
+
+	var y = d3.scale.linear()
+			.domain([0, d3.max(data, function(d){
+				return +d[selection];
+			})])
+			.range([height, 0]);
+
+	var x = d3.scale.ordinal()
+			.domain(data.map(function(d){ return d.State;}))
+			.rangeBands([0, width]);
+
+
+	var xAxis = d3.svg.axis()
+		.scale(x)
+	    .orient("bottom");
+
+	var yAxis = d3.svg.axis()
+		.scale(y)
+	    .orient("left");
+
+	svg.append("g")
+    	.attr("class", "x axis")
+    	.attr("transform", "translate(0," + height + ")")
+    	.call(xAxis)
+    	.selectAll("text")
+    	.style("font-size", "12px")
+        .style("fill","white")
+      	.style("text-anchor", "end")
+      	.attr("dx", "-.8em")
+      	.attr("dy", "-.55em")
+      	.attr("transform", "rotate(300)" );
+
+
+ 	svg.append("g")
+    	.attr("class", "y axis")
+    	.call(yAxis)
+        .style("fill","white");
+
+	svg.selectAll("rectangle")
+		.data(data)
+		.enter()
+		.append("rect")
+		.attr("class","rectangle")
+		.attr("width", width/data.length)
+		.attr("height", function(d){
+			return height - y(+d[selection]);
+		})
+		.attr("x", function(d, i){
+			return (width / data.length) * i ;
+		})
+		.attr("y", function(d){
+			return y(+d[selection]);
+		})
+        .append("title")
+		.text(function(d){
+			return d.State + " : " + d[selection];
+		});
+
+	var selector = d3.select("#drop")
+    	.append("select")
+    	.attr("id","dropdown")
+    	.on("change", function(d){
+        	selection = document.getElementById("dropdown");
+
+        	y.domain([0, d3.max(data, function(d){
+				return +d[selection.value];})]);
+
+        	yAxis.scale(y);
+
+        	d3.selectAll(".rectangle")
+           		.transition()
+	            .attr("height", function(d){
+					return height - y(+d[selection.value]);
+				})
+				.attr("x", function(d, i){
+					return (width / data.length) * i ;
+				})
+				.attr("y", function(d){
+					return y(+d[selection.value]);
+				})
+           		.ease("linear")
+           		.select("title")
+           		.text(function(d){
+           			return d.State + " : " + d[selection.value];
+           		});
+      
+           	d3.selectAll("g.y.axis")
+           		.transition()
+           		.call(yAxis);
+
+         });
+
+    selector.selectAll("option")
+      .data(elements)
+      .enter().append("option")
+      .attr("value", function(d){
+        return d;
+      })
+      .text(function(d){
+        return d;
+      })
+    
+    svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "24px")
+        .style("fill","white")
+        .style("font-weight","600")
+        .text("Wildfires In Numbers")
+        .font;
+
+});
+
+</script>
+</body>

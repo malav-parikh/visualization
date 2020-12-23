@@ -1,0 +1,50 @@
+state_name,CO2Emissions,Deaths,Number_of_fires
+Texas,706.5,10650,9827
+California,358.6,13881,9560
+Florida,226.5,12619,3280
+Louisiana,226.4,2467,1064
+Pennsylvania,215.3,6667,537
+Ohio,204.3,7312,68
+Illinois,201.1,5732,13
+Indiana,175.8,4375,22
+New York,156.7,7258,57
+Michigan,151.8,5688,270
+Georgia,131.9,4866,3929
+Missouri,122.4,3940,3398
+North Carolina,115,5540,5125
+Kentucky,113.6,3480,892
+Alabama,108.3,3484,1254
+New Jersey,101,3227,735
+Virginia,97.9,3363,1522
+Tennessee,97.6,4657,593
+Wisconsin,97.6,2834,696
+Oklahoma,92.7,3035,1906
+West Virginia,90.8,1681,520
+Minnesota,87.9,2464,1036
+Colorado,87,2604,967
+Arizona,85.6,3802,2321
+Washington,78.2,3177,1346
+Iowa,76.3,1939,427
+South Carolina,68.8,2983,1092
+Mississippi,67.4,2037,2775
+Arkansas,63.9,2517,1706
+Massachusetts,63.3,2842,1216
+Utah,58.2,826,1166
+Kansas,57.9,1832,71
+North Dakota,56.2,358,1086
+Maryland,51.6,2079,108
+New Mexico,48.7,1143,813
+Nebraska,47.7,1224,49
+Oregon,38.3,2088,2049
+Nevada,36.2,1633,768
+Alaska,34.1,204,364
+Connecticut,33.4,1471,97
+Montana,30.3,752,2422
+Idaho,18.4,925,1598
+Hawaii,17.6,378,3
+Maine,15.4,982,489
+South Dakota,14.5,505,1420
+New Hampshire,13.4,755,36
+Delaware,12.3,526,5
+Rhode Island,10,521,31
+Vermont,5.8,375,55
